@@ -297,9 +297,8 @@ class item_a(pg.sprite.Sprite):
     鬼人薬の管理
     """
     def __init__(self):
-        self.x = 0
         self.font = pg.font.SysFont("hgp創英角ﾎﾟｯﾌﾟ体", 40)
-        self.color = (255, 0, self.x)
+        self.color = (255, 0, 0)
         self.value = 3
         self.image = self.font.render(f"鬼人薬: {self.value}", 0, self.color)
         self.rect = self.image.get_rect()
@@ -307,6 +306,22 @@ class item_a(pg.sprite.Sprite):
 
     def update(self, screen: pg.Surface):
         self.image = self.font.render(f"鬼人薬: {self.value}", 0, self.color)
+        screen.blit(self.image, self.rect)
+
+
+class item_a_efe():
+    """"
+    鬼人薬のエフェクト
+    """
+    def __init__(self):
+        self.font = pg.font.SysFont("hgp創英角ﾎﾟｯﾌﾟ体", 40)
+        self.color = (255, 0, 0)
+        self.image = self.font.render(f"UP中！", 0, self.color)
+        self.rect = self.image.get_rect()
+        self.rect.center = 800, HEIGHT-20
+
+    def update(self, screen: pg.Surface):
+        self.image = self.font.render(f"UP中！", 0, self.color)
         screen.blit(self.image, self.rect)
 
 
@@ -392,8 +407,10 @@ def main():
     emys = pg.sprite.Group()
     shields = pg.sprite.Group()  # インスタンスをShieldグループに追加
     gravity = pg.sprite.Group()
+    Item_a_efe = item_a_efe()
 
-    item_num = 0
+    at = 1
+    a_co = 500
     tmr = 0
     clock = pg.time.Clock()
     state = "normal"
@@ -418,21 +435,24 @@ def main():
                 if score.value >= 20:  #電磁パルス
                     Emp(bombs, emys, screen)
                     score.value -= 20
-            if event.type == pg.KEYDOWN and event.key == pg.K_k:
-                Item_a.x += 255
-                item_num += 1
-            # if event.type == pg.KEYDOWN and event.key == pg.K_i:   #回復薬
-            #     if Item_h.value >= 1:
-            #         Item_h.value -= 1
-            #         #HPが回復する
-            # if event.type == pg.KEYDOWN and event.key == pg.K_k:   #強走薬
-            #     if Item_k.value >= 1:
-            #         Item_k.value -= 1
-            #         #スタミナが減らなくなる
-            # if event.type == pg.KEYDOWN and event.key == pg.K_j:   #鬼人薬
-            #     if Item_a.value >= 1:
-            #         Item_a.value -= 1
-            #         #攻撃力が上がる
+            if event.type == pg.KEYDOWN and event.key == pg.K_i:   #回復薬
+                if Item_h.value >= 1:
+                    #if k_hp.hp <= 70:
+                        Item_h.value -= 1
+                        #k_hp.damage(-30)       回復
+            if event.type == pg.KEYDOWN and event.key == pg.K_k:   #強走薬
+                if Item_k.value >= 1:
+                    Item_k.value -= 1
+                    #スタミナ回復が早くなる
+            if event.type == pg.KEYDOWN and event.key == pg.K_j:   #鬼人薬
+                if Item_a.value >= 1:
+                    Item_a.value -= 1
+                    at = 2         #攻撃力UP
+        if at == 2:
+            a_co -= 1
+            if a_co <= 0:
+                at = 1
+                a_co = 500
 
 
             if event.type == pg.KEYDOWN and event.key == pg.K_RETURN:
@@ -465,7 +485,7 @@ def main():
 
         for emy in pg.sprite.groupcollide(emys, beams, True, True).keys():
             exps.add(Explosion(emy, 100))  # 爆発エフェクト
-            score.value += 10  # 10点アップ
+            score.value += 10 * at  # 10点アップ
             bird.change_img(6, screen)  # こうかとん喜びエフェクト
 
         for bomb in pg.sprite.groupcollide(bombs, beams, True, True).keys():
@@ -509,6 +529,8 @@ def main():
         Item_h.update(screen)
         Item_k.update(screen)
         Item_a.update(screen)
+        if at == 2:
+            Item_a_efe.update(screen)
         shields.update()
         shields.draw(screen)
         pg.display.update()
