@@ -90,7 +90,7 @@ class Beam():
         self.sita = math.atan2(-self.vy, self.vx)
         self.sita1 = math.degrees(self.sita)
         self.img = pg.transform.rotozoom(self.img, self.sita1, 1)
-        print(self.sita1)
+        # print(self.sita1)
         self.rct.centerx = bird.rct.centerx + (bird.rct.right - bird.rct.left) * self.vx / 5
         self.rct.centery = bird.rct.centery + (bird.rct.bottom - bird.rct.top) * self.vy / 5
 
@@ -188,7 +188,7 @@ def main():
             beams.remove(None)
  
         for i in range(len(exp)):
-            print(i)
+            # print(i)
             # if exp[i].life <= 0:
             #     exp.pop(i)
             exp[i].update(screen)
