@@ -122,6 +122,7 @@ class Bomb(pg.sprite.Sprite):
         """
         super().__init__()
         rad = random.randint(10, 50)  # 爆弾円の半径：10以上50以下の乱数
+        self.rad = rad
         self.image = pg.Surface((2*rad, 2*rad))
         color = random.choice(__class__.colors)  # 爆弾円の色：クラス変数からランダム選択
         pg.draw.circle(self.image, color, (rad, rad), rad)
@@ -326,16 +327,18 @@ class Emp:
 class HP:
     """
     HPを管理するクラス
+    引数 hp:HPの設定値int name:HPバーに表示する名前str
+         xy:HPバーを表示する左端中央の座標(int, int) sz:Hpバーのサイズint
     """
-    def __init__(self, hp: int, name: str, xy: tuple):
-        self.font = pg.font.SysFont("hgp創英角ﾎﾟｯﾌﾟ体", 15)
+    def __init__(self, hp: int, name: str, xy: tuple, sz: int):
+        self.font = pg.font.SysFont("hgp創英角ﾎﾟｯﾌﾟ体", sz)
         self.color = (0, 200, 0)
         self.max_hp = hp
         self.hp = hp
         self.name = name
         self.x = xy[0]
         self.y = xy[1]
-        self.size = 500, 30
+        self.size = sz*30, sz*2
         self.image1 = pg.Surface(self.size)
         pg.draw.rect(self.image1, (0, 0, 0), (0, 0, self.size[0], self.size[1]))
         pg.draw.rect(self.image1, self.color, (0, 0, self.size[0]*self.hp/self.max_hp, self.size[1]))
@@ -345,21 +348,66 @@ class HP:
         self.rect1.midleft = self.x, self.y
         self.rect2.midleft = self.x, self.y
 
-    def damage(self, damege: int):
+    def damage(self, damege: int):  # ダメージを受けた時のメソッド
         self.hp -= damege
         if self.hp > self.max_hp:
             self.hp = self.max_hp
         elif self.hp < 0:
             self.hp = 0
 
-    def update(self, screen: pg.Surface):
+    def update(self, screen: pg.Surface):  # HPゲージの更新
         if self.hp <= (self.max_hp*0.5):
             self.color = (200, 200, 0)
-        if self.hp <= (self.max_hp*0.3):
+        if self.hp <= (self.max_hp*0.2):
             self.color = (200, 0, 0)
         pg.draw.rect(self.image1, (0, 0, 0), (0, 0, self.size[0], self.size[1]))
         pg.draw.rect(self.image1, self.color, (0, 0, self.size[0]*self.hp/self.max_hp, self.size[1]))
         self.image2 = self.font.render(f"{self.name} : {self.hp}/{self.max_hp}", 0, (255, 255, 255))
+        screen.blit(self.image1, self.rect1)
+        screen.blit(self.image2, self.rect2)
+
+
+class SP:
+    """
+    スタミナを管理するクラス
+    """
+    def __init__(self, sp: int, xy: tuple, sz: int):
+        self.font = pg.font.SysFont("hgp創英角ﾎﾟｯﾌﾟ体", sz)
+        self.color = (240, 120, 0)
+        self.max_sp = sp
+        self.sp = sp
+        self.nsp = 0.25
+        self.x = xy[0]
+        self.y = xy[1]
+        self.size = sz*25, sz
+        self.image1 = pg.Surface(self.size)
+        pg.draw.rect(self.image1, (0, 0, 0), (0, 0, self.size[0], self.size[1]))
+        pg.draw.rect(self.image1, self.color, (0, 0, self.size[0]*self.sp/self.max_sp, self.size[1]))
+        self.image2 = self.font.render(f"SP: {self.sp}/{self.max_sp}", 0, (255, 255, 255))
+        self.rect1 = self.image1.get_rect()
+        self.rect2 = self.image2.get_rect()
+        self.rect1.midleft = self.x, self.y+sz*2
+        self.rect2.midleft = self.x, self.y+sz*2
+
+    def pay_sp(self, damege: int):  # ダメージを受けた時のメソッド
+        if self.sp > self.max_sp:
+            self.sp = self.max_sp
+        elif self.sp-damege < 0:
+            self.sp = 0
+        else:
+            self.sp -= damege
+
+    def update(self, screen: pg.Surface):  # SPゲージの更新
+        if self.sp == self.max_sp:
+            self.nsp = 0.25
+        elif self.sp <= 5:
+            self.nsp = 0.125
+        self.sp += self.nsp
+        if self.sp > self.max_sp:
+            self.sp = self.max_sp
+        pg.draw.rect(self.image1, (0, 0, 0), (0, 0, self.size[0], self.size[1]))
+        pg.draw.rect(self.image1, self.color, (0, 0, self.size[0]*self.sp/self.max_sp, self.size[1]))
+        self.image2 = self.font.render(f"SP: {int(self.sp)}/{self.max_sp}", 0, (255, 255, 255))
         screen.blit(self.image1, self.rect1)
         screen.blit(self.image2, self.rect2)
 
@@ -377,7 +425,9 @@ def main():
     emys = pg.sprite.Group()
     shields = pg.sprite.Group()  # インスタンスをShieldグループに追加
     gravity = pg.sprite.Group()
-    k_hp = HP(100, "幻想魔獣こうかとん", (30, 30))
+    k_hp = HP(100, "幻想魔獣こうかとん", (30, 100), 12)
+    k_sp = SP(100, (30, 100), 12)
+    e_hp = HP(300, "未確認飛行物体", (240, 40), 20)
 
     tmr = 0
     clock = pg.time.Clock()
@@ -390,11 +440,15 @@ def main():
                 return 0
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
                 if event.mod == 1:
-                    nbeam = NeoBeam(bird, 5)
-                    beams.add(nbeam.gen_beams())
-                    # beams.add(i for i in NeoBeam(bird, 5))
+                    if k_sp.sp >= 50:
+                        k_sp.sp -= 50
+                        nbeam = NeoBeam(bird, 5)
+                        beams.add(nbeam.gen_beams())
+                        # beams.add(i for i in NeoBeam(bird, 5))
                 else:
-                    beams.add(Beam(bird))
+                    if k_sp.sp >= 15:
+                        k_sp.sp -= 15
+                        beams.add(Beam(bird))
             if event.type == pg.KEYDOWN and event.key == pg.K_c:
                 if score.value >= 50 and len(shields) == 0:
                     shields.add(Shield(bird, 400))
@@ -435,6 +489,7 @@ def main():
         for emy in pg.sprite.groupcollide(emys, beams, True, True).keys():
             exps.add(Explosion(emy, 100))  # 爆発エフェクト
             score.value += 10  # 10点アップ
+            e_hp.damage(10)  # 敵に10ダメージ与える
             bird.change_img(6, screen)  # こうかとん喜びエフェクト
 
         for bomb in pg.sprite.groupcollide(bombs, beams, True, True).keys():
@@ -455,8 +510,8 @@ def main():
             if state == "hyper":
                 exps.add(Explosion(bomb, 50))
             if state == "normal":
-                k_hp.damage(10)
-                if k_hp.hp == 0: 
+                k_hp.damage(bomb.rad//2)  # こうかとんが10ダメージ受ける
+                if k_hp.hp == 0:  # こうかとんのHPが0になったとき
                     bird.change_img(8, screen) # こうかとん悲しみエフェクト
                     score.update(screen)
                     pg.display.update()
@@ -480,6 +535,8 @@ def main():
         shields.update()
         shields.draw(screen)
         k_hp.update(screen)
+        k_sp.update(screen)
+        e_hp.update(screen)
         pg.display.update()
         tmr += 1
         clock.tick(50)
