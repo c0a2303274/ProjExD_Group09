@@ -11,22 +11,7 @@ HEIGHT = 650  # ゲームウィンドウの高さ
 NUM_OF_BOMBS = 5
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-
-def check_bound(obj_rct: pg.Rect) -> tuple[bool, bool]:
-    """
-    オブジェクトが画面内or画面外を判定し，真理値タプルを返す関数
-    引数：こうかとんや爆弾，ビームなどのRect
-    戻り値：横方向，縦方向のはみ出し判定結果（画面内：True／画面外：False）
-    """
-    yoko, tate = True, True
-    if obj_rct.left < 0 or WIDTH < obj_rct.right:
-        yoko = False
-    if obj_rct.top < 0 or HEIGHT < obj_rct.bottom:
-        tate = False
-    return yoko, tate
-
-
-class Bird:
+class Brave:
     """
     ゲームキャラクター（こうかとん）に関するクラス
     """
@@ -119,35 +104,6 @@ class Beam():
             screen.blit(self.img, self.rct)    
 
 
-class Bomb:
-    """
-    爆弾に関するクラス
-    """
-    def __init__(self, color: tuple[int, int, int], rad: int):
-        """
-        引数に基づき爆弾円Surfaceを生成する
-        引数1 color：爆弾円の色タプル
-        引数2 rad：爆弾円の半径
-        """
-        self.img = pg.Surface((2*rad, 2*rad))
-        pg.draw.circle(self.img, color, (rad, rad), rad)
-        self.img.set_colorkey((0, 0, 0))
-        self.rct = self.img.get_rect()
-        self.rct.center = random.randint(0, WIDTH), random.randint(0, HEIGHT)
-        self.vx, self.vy = +5, +5
-
-    def update(self, screen: pg.Surface):
-        """
-        爆弾を速度ベクトルself.vx, self.vyに基づき移動させる
-        引数 screen：画面Surface
-        """
-        yoko, tate = check_bound(self.rct)
-        if not yoko:
-            self.vx *= -1
-        if not tate:
-            self.vy *= -1
-        self.rct.move_ip(self.vx, self.vy)
-        screen.blit(self.img, self.rct)
 
 class Score():
     """
@@ -173,30 +129,15 @@ class Score():
         self.img = self.fonto.render(f"{self.score}", 0, self.color)
         screen.blit(self.img, self.rct)
 
-class Explosion():
-    def __init__(self, rct:pg.Rect) -> None:
-        self.img = pg.image.load("fig/explosion.gif")
-        self.img_f = pg.transform.flip(self.img, True, True)
-        self.img_rct = self.img.get_rect()
-        self.img_rct.center = rct.center
-        self.life = 24
-    
-    def update(self, screen: pg.Surface):
-        self.life -= 1
-        if self.life > 0:
-            if (self.life // 6) % 2 == 0:
-                screen.blit(self.img, self.img_rct)
-            else:
-                screen.blit(self.img_f, self.img_rct)
 
 
 def main():
     pg.display.set_caption("たたかえ！こうかとん")
     screen = pg.display.set_mode((WIDTH, HEIGHT))    
     bg_img = pg.image.load("fig/pg_bg.jpg")
-    bird = Bird((300, 200))
+    bird = Brave((300, 200))
     # bomb = Bomb((255, 0, 0), 10)
-    bombs = [Bomb((255, 0, 0), 10) for _ in range(NUM_OF_BOMBS)]
+    bombs = [Brave((255, 0, 0), 10) for _ in range(NUM_OF_BOMBS)]
     # beam = None
     beams = []
     exp = []
