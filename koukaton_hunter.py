@@ -336,11 +336,11 @@ def main():
     pg.display.set_caption("こうかとん狩猟")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
     bg_images = [
-        pg.image.load("fig/1.jpg"),
+        pg.image.load("fig/1.jpg"),  # 画像
         pg.image.load("fig/2.jpg"),
         pg.image.load("fig/3.jpg"),
         pg.image.load("fig/4.jpg"),
-        pg.image.load("fig/5.jpg")]#画像のリスト
+        pg.image.load("fig/5.jpg")]  # 画像のリスト
     
     current_bg_index = 0
 
