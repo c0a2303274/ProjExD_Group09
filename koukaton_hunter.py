@@ -39,7 +39,7 @@ def calc_orientation(org: pg.Rect, dst: pg.Rect) -> tuple[float, float]:
 
 class Hunter(pg.sprite.Sprite):
     """
-    ゲームキャラクター（こうかとん）に関するクラス
+    ゲームキャラクター（Hunter）に関するクラス
     """
     delta = {  # 押下キーと移動量の辞書
         pg.K_UP: (0, -5),
@@ -62,8 +62,8 @@ class Hunter(pg.sprite.Sprite):
 
     def __init__(self,num: int, xy:tuple[int, int]):
         """
-        こうかとん画像Surfaceを生成する
-        引数 xy：こうかとん画像の初期位置座標タプル
+        Hunter画像Surfaceを生成する
+        引数 xy：Hunter画像の初期位置座標タプル
         """
         super().__init__()
         self.image = __class__.imgs[(+5, 0)]
@@ -75,14 +75,17 @@ class Hunter(pg.sprite.Sprite):
 
     def change_img(self, num: int, screen: pg.Surface):
         """
-        こうかとん画像を切り替え，画面に転送する
-        引数1 num：こうかとん画像ファイル名の番号
+        Hunter画像を切り替え，画面に転送する
+        引数1 num：Hunter画像ファイル名の番号
         引数2 screen：画面Surface
         """
         self.image = pg.transform.rotozoom(pg.image.load(f"fig/{num}.png"), 0, 0.9)
         screen.blit(self.image, self.rect)
 
     def brink(self):
+        """
+        Hunterのジャスト回避の設定
+        """
         if self.life > 0:
             self.life -= 1
             self.flag = 2
@@ -98,7 +101,7 @@ class Hunter(pg.sprite.Sprite):
 
     def update(self, key_lst: list[bool], screen: pg.Surface):
         """
-        押下キーに応じてこうかとんを移動させる
+        押下キーに応じてHunterを移動させる
         引数1 key_lst：押下キーの真理値リスト
         引数2 screen：画面Surface
         """
@@ -120,7 +123,7 @@ class Hunter(pg.sprite.Sprite):
 
 class Attack(pg.sprite.Sprite):
     """
-     主人公の攻撃に関するクラス
+     Hunterの攻撃に関するクラス
     """
     def __init__(self, hunter:Hunter, skill: int):
         super().__init__()
@@ -405,12 +408,11 @@ class Score:
 
 class Hyper:
     """
-    打ち落とした爆弾，敵機の数をスコアとして表示するクラス
-    爆弾：1点
-    敵機：10点
+    ジャスト回避時に付与する無敵を視覚的に表示するクラス。
     """
     def __init__(self, hunter: Hunter, screen: pg.Surface):
         self.font = pg.font.SysFont("hgp創英角ﾎﾟｯﾌﾟ体", 20)
+        self.img = pg.Surface([WIDTH, HEIGHT], )
         self.color = (128, 128, 128)
         self.word = "無敵"
         self.image = self.font.render(f"{self.word}", 0, self.color)
