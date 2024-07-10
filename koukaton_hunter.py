@@ -89,7 +89,7 @@ class Hunter(pg.sprite.Sprite):
         if self.life > 0:
             self.life -= 1
             self.flag = 2
-            self.image.set_alpha(128)
+            # self.image.set_alpha(128)
             return True
         else:
             self.flag = 1
@@ -412,7 +412,9 @@ class Hyper:
     """
     def __init__(self, hunter: Hunter, screen: pg.Surface):
         self.font = pg.font.SysFont("hgp創英角ﾎﾟｯﾌﾟ体", 20)
-        self.img = pg.Surface([WIDTH, HEIGHT], )
+        self.img = pg.Surface([WIDTH, HEIGHT])
+        pg.draw.rect(self.img, [200, 200, 200], [0, 0, WIDTH, HEIGHT])
+        self.img.set_alpha(64)
         self.color = (128, 128, 128)
         self.word = "無敵"
         self.image = self.font.render(f"{self.word}", 0, self.color)
@@ -420,6 +422,8 @@ class Hyper:
         self.rect.centerx = hunter.rect.centerx + 50
         self.rect.centery = hunter.rect.centery - 50
         screen.blit(self.image, self.rect)
+        screen.blit(self.img, [0, 0])
+        
 
 class Shield(pg.sprite.Sprite):
     """
@@ -577,10 +581,11 @@ def main():
         if bflag == True:
             bflag = hunter.brink()
             state = "hyper"
-            cl = 40
+            cl = 30
             Hyper(hunter, screen)
         else:
             state = "nomal"
+            cl = 50
         hunter.update(key_lst, screen)
         # beams.update()
         # beams.draw(screen)
