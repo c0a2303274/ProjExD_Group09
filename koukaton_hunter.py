@@ -4,8 +4,6 @@ import random
 import sys
 import time
 import pygame as pg
-# from pygame.sprite import _Group
-
 
 WIDTH = 1100  # ゲームウィンドウの幅
 HEIGHT = 650  # ゲームウィンドウの高さ
@@ -276,7 +274,7 @@ class Score:
     def __init__(self):
         self.font = pg.font.Font(None, 50)
         self.color = (0, 0, 255)
-        self.value = 70
+        self.value = 160
         self.image = self.font.render(f"Score: {self.value}", 0, self.color)
         self.rect = self.image.get_rect()
         self.rect.center = 100, HEIGHT-50
@@ -286,61 +284,19 @@ class Score:
         screen.blit(self.image, self.rect)
 
 
-class Shield(pg.sprite.Sprite):
-    """
-    こうかとんの前に防御壁を出現させ、着弾を防ぐクラス
-    """
-    def __init__(self, bird: Bird, life: int):
-        super().__init__()
-        self.size = (20, bird.rect.height*2)  # 大きさのタプル
-        self.image = pg.Surface(self.size)  # 空のSurfaceを作成
-        self.life = life  # 発動時間の設定
-        self.color = (0, 0, 255)  # 矩形の色を青色に指定
-        pg.draw.rect(self.image, self.color, (0, 0, 20, bird.rect.height*2))
-        self.vx, self.vy = bird.dire
-        angle = math.degrees(math.atan2(-self.vy, self.vx))
-        self.image = pg.transform.rotozoom(self.image, angle, 1.0)
-        self.image.set_colorkey((0, 0, 0))
-        self.rect = self.image.get_rect()
-        self.rect.centery = bird.rect.centery+bird.rect.height*self.vy
-        self.rect.centerx = bird.rect.centerx+bird.rect.width*self.vx
 
-    def update(self):
-        self.life -= 1
-        if self.life < 0:
-            self.kill()
-
-
-# class Emp:
-#     """
-#     enmを発動
-#     引数 bombs:Bombインスタンスグループ emys:Enemyインスタンスグループ
-#          screen:画面Surface
-#     """
-#     def __init__(self, bombs: pg.sprite.Group, emys:pg.sprite.Group, screen: pg.Surface):
-#         for emy in emys:
-#             emy.interval = math.inf
-#             emy.image = pg.transform.laplacian(emy.image)
-#             emy.image.set_colorkey((0,0,0))
-#         for bomb in bombs:
-#             bomb.speed /= 2
-#         self.image = pg.Surface((WIDTH, HEIGHT))
-#         pg.draw.rect = (self.image, (255, 255, 0), (0, 0, 1600, 900))
-#         self.image.set_alpha(100)
-#         screen.blit(self.image, [0, 0])
-#         time.sleep(0.05)
-#         pg.display.update()
 
 
 def main():
     pg.display.set_caption("こうかとん狩猟")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
     bg_images = [
-        pg.image.load("fig/1.jpg"),  # 画像
-        pg.image.load("fig/2.jpg"),
-        pg.image.load("fig/3.jpg"),
-        pg.image.load("fig/4.jpg"),
-        pg.image.load("fig/5.jpg")]  # 画像のリスト
+        pg.image.load("fig/bg1.jpg"),  # 画像
+        pg.image.load("fig/bg2.jpg"),
+        pg.image.load("fig/bg3.jpg"),
+        pg.image.load("fig/bg4.jpg"),
+        pg.image.load("fig/bg5.jpg"),
+        pg.image.load("fig/bg6.jpg")]  # 画像のリスト
     
     current_bg_index = 0
 
@@ -358,7 +314,6 @@ def main():
     state = "normal"
 
     background_flag = 0
-    # hyper_life = 0
     while True:
         key_lst = pg.key.get_pressed()
         for event in pg.event.get():
@@ -370,29 +325,7 @@ def main():
                     beams.add(nbeam.gen_beams())
                 else:
                     beams.add(Beam(bird))
-            if event.type == pg.KEYDOWN and event.key == pg.K_c:
-                if score.value >= 50 and len(shields) == 0:
-                    shields.add(Shield(bird, 400))
-                    score.value -= 50
-            # if event.type == pg.KEYDOWN and event.key == pg.K_e:
-            #     if score.value >= 20:  #電磁パルス
-            #         Emp(bombs, emys, screen)
-            #         score.value -= 20
 
-        #     if event.type == pg.KEYDOWN and event.key == pg.K_RETURN:
-        #         if score.value >= 200:
-        #             gravity.add(Gravity(400))
-        #             score.value -= 200
-        #     if key_lst[pg.K_RSHIFT] and score.value >= 100 and state == "normal":
-        #         state = "hyper"
-        #         hyper_life = 500
-        #         score.value -= 100
-
-        # if state == "hyper":
-        #     bird.image = pg.transform.laplacian(bird.image)
-        #     hyper_life -= 1
-        #     if hyper_life < 0:
-        #         state = "normal"
         if background_flag == 0 and score.value <= 150:
             current_bg_index = update_background(score.value, current_bg_index, bg_images)#追加した
             background_flag = 1
@@ -400,6 +333,10 @@ def main():
         if background_flag == 1 and score.value <= 66:
             current_bg_index = update_background(score.value, current_bg_index, bg_images)#追加した
             background_flag = 2
+
+        if background_flag == 2 and score.value <= 0:
+            current_bg_index = update_background(score.value, current_bg_index, bg_images)#追加した
+            background_flag = 3
         screen.blit(bg_images[current_bg_index], [0, 0])#追加した
 
         if tmr % 200 == 0:
