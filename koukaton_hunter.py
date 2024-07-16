@@ -563,7 +563,7 @@ def main():
         #     exps.add(Explosion(emy, 50))
 
         for emy in pg.sprite.spritecollide(hunter, emys, False):
-            if state == "nomal":
+            if state == "normal":
                 hunter.change_img(8, screen) # こうかとん悲しみエフェクト
                 score.update(screen)
                 pg.display.update()
@@ -584,7 +584,7 @@ def main():
             cl = 30
             Hyper(hunter, screen)
         else:
-            state = "nomal"
+            state = "normal"
             cl = 50
         hunter.update(key_lst, screen)
         # beams.update()
