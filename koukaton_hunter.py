@@ -43,10 +43,10 @@ class Hunter(pg.sprite.Sprite):
     ゲームキャラクター（Hunter）に関するクラス
     """
     delta = {  # 押下キーと移動量の辞書
-        pg.K_UP: (0, -1),
-        pg.K_DOWN: (0, +1),
-        pg.K_LEFT: (-1, 0),
-        pg.K_RIGHT: (+1, 0),
+        pg.K_UP: (0, -5),
+        pg.K_DOWN: (0, +5),
+        pg.K_LEFT: (-5, 0),
+        pg.K_RIGHT: (+5, 0),
     }
     img0 = pg.transform.rotozoom(pg.image.load("fig/3.png"), 0, 1.3)
     image = pg.transform.flip(img0, True, False)  # デフォルトのこうかとん（右向き）
@@ -169,85 +169,17 @@ class Attack(pg.sprite.Sprite):
 
         
 
-class bird(pg.sprite.Sprite):
-    """
-    ゲームキャラクター（こうかとん）に関するクラス
-    """
-    delta = {  # 押下キーと移動量の辞書
-        pg.K_UP: (0, -1),
-        pg.K_DOWN: (0, +1),
-        pg.K_LEFT: (-1, 0),
-        pg.K_RIGHT: (+1, 0),
-    }
-
-    def __init__(self, num: int, xy: tuple[int, int]):
-        """
-        こうかとん画像Surfaceを生成する
-        引数1 num：こうかとん画像ファイル名の番号
-        引数2 xy：こうかとん画像の位置座標タプル
-        """
-        super().__init__()
-        img0 = pg.transform.rotozoom(pg.image.load(f"fig/{num}.png"), 0, 2.0)
-        image = pg.transform.flip(img0, True, False)  # デフォルトのこうかとん
-        self.imgs = {
-            (+1, 0): image,  # 右
-            (+1, -1): pg.transform.rotozoom(image, 45, 1.0),  # 右上
-            (0, -1): pg.transform.rotozoom(image, 90, 1.0),  # 上
-            (-1, -1): pg.transform.rotozoom(img0, -45, 1.0),  # 左上
-            (-1, 0): img0,  # 左
-            (-1, +1): pg.transform.rotozoom(img0, 45, 1.0),  # 左下
-            (0, +1): pg.transform.rotozoom(image, -90, 1.0),  # 下
-            (+1, +1): pg.transform.rotozoom(image, -45, 1.0),  # 右下
-        }
-        self.dire = (+1, 0)
-        self.image = self.imgs[self.dire]
-        self.rect = self.image.get_rect()
-        self.rect.center = xy
-        self.speed = 10
-        # self.state = "normal"
-        # self.hyper_life = 0
-        # self.value = 0
-
-    def change_img(self, num: int, screen: pg.Surface):
-        """
-        こうかとん画像を切り替え，画面に転送する
-        引数1 num：こうかとん画像ファイル名の番号
-        引数2 screen：画面Surface
-        """
-        self.image = pg.transform.rotozoom(pg.image.load(f"fig/{num}.png"), 0, 2.0)
-        screen.blit(self.image, self.rect)
-
-    def update(self, key_lst: list[bool], screen: pg.Surface):
-        """
-        押下キーに応じてこうかとんを移動させる
-        引数1 key_lst：押下キーの真理値リスト
-        引数2 screen：画面Surface
-        無敵の発動条件、発動時間、消費スコアの設定
-        """
-        sum_mv = [0, 0]
-        for k, mv in __class__.delta.items():
-            if key_lst[k]:
-                sum_mv[0] += mv[0]
-                sum_mv[1] += mv[1]
-        self.rect.move_ip(self.speed * sum_mv[0], self.speed * sum_mv[1])
-        if check_bound(self.rect) != (True, True):
-            self.rect.move_ip(-self.speed * sum_mv[0], -self.speed * sum_mv[1])
-        if not (sum_mv[0] == 0 and sum_mv[1] == 0):
-            self.dire = tuple(sum_mv)
-            self.image = self.imgs[self.dire]
-        screen.blit(self.image, self.rect)
-
 class Bomb(pg.sprite.Sprite):
     """
     爆弾に関するクラス
     """
     colors = [(255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 255, 0), (255, 0, 255), (0, 255, 255)]
 
-    def __init__(self, emy: "Monster", bird: Bird):
+    def __init__(self, emy: "Monster", hunter:Hunter):
         """
         爆弾円Surfaceを生成する
         引数1 emy：爆弾を投下する敵機
-        引数2 bird：攻撃対象のこうかとん
+        引数2 hunter：攻撃対象のこうかとん
         """
         super().__init__()
         rad = (100)  # 爆弾円の半径：75
@@ -256,8 +188,8 @@ class Bomb(pg.sprite.Sprite):
         pg.draw.circle(self.image, color, (rad, rad), rad)
         self.image.set_colorkey((0, 0, 0))
         self.rect = self.image.get_rect()
-        # 爆弾を投下するemyから見た攻撃対象のbirdの方向を計算
-        self.vx, self.vy = calc_orientation(emy.rect, bird.rect)  
+        # 爆弾を投下するemyから見た攻撃対象のhunterの方向を計算
+        self.vx, self.vy = calc_orientation(emy.rect, hunter.rect)  
         self.rect.centerx = emy.rect.centerx
         self.rect.centery = emy.rect.centery+emy.rect.height//2
         self.speed = 15
@@ -402,22 +334,22 @@ class Shield(pg.sprite.Sprite):
     """
     こうかとんの前に防御壁を出現させ、着弾を防ぐクラス
     """
-    def __init__(self, bird: Bird, life: int):
+    def __init__(self, hunter:Hunter, life: int):
         super().__init__()
-        self.size = (20, bird.rect.height*2)  # 大きさのタプル
+        self.size = (20, hunter.rect.height*2)  # 大きさのタプル
         self.image = pg.Surface(self.size)  # 空のSurfaceを作成
         self.life = life  # 発動時間の設定
         self.color = (0, 0, 255)  # 矩形の色を青色に指定
-        pg.draw.rect(self.image, self.color, (0, 0, 20, bird.rect.height*2))
-        self.vx, self.vy = bird.dire
+        pg.draw.rect(self.image, self.color, (0, 0, 20, hunter.rect.height*2))
+        self.vx, self.vy = hunter.dire
         angle = math.degrees(math.atan2(-self.vy, self.vx))
         self.image = pg.transform.rotozoom(self.image, angle, 1.0)
         self.image.set_colorkey((0, 0, 0))
         self.rect = self.image.get_rect()
-        self.rect.centery = bird.rect.centery+bird.rect.height*self.vy
-        self.rect.centerx = bird.rect.centerx+bird.rect.width*self.vx
+        self.rect.centery = hunter.rect.centery+hunter.rect.height*self.vy
+        self.rect.centerx = hunter.rect.centerx+hunter.rect.width*self.vx
 
-    def update(self):
+    def update(self, screen):
         self.image = self.font.render(f"Score: {self.value}", 0, self.color)
         screen.blit(self.image, self.rect)
 
@@ -439,53 +371,6 @@ class Hyper:
         screen.blit(self.image, self.rect)
         screen.blit(self.img, [0, 0])
         
-
-class Shield(pg.sprite.Sprite):
-    """
-    こうかとんの前に防御壁を出現させ、着弾を防ぐクラス
-    """
-    def __init__(self, hunter: Hunter, life: int):
-        super().__init__()
-        self.size = (20, hunter.rect.height*2)  # 大きさのタプル
-        self.image = pg.Surface(self.size)  # 空のSurfaceを作成
-        self.life = life  # 発動時間の設定
-        self.color = (0, 0, 255)  # 矩形の色を青色に指定
-        pg.draw.rect(self.image, self.color, (0, 0, 20, hunter.rect.height*2))
-        self.vx, self.vy = hunter.dire
-        angle = math.degrees(math.atan2(-self.vy, self.vx))
-        self.image = pg.transform.rotozoom(self.image, angle, 1.0)
-        self.image.set_colorkey((0, 0, 0))
-        self.rect = self.image.get_rect()
-        self.rect.centery = hunter.rect.centery+hunter.rect.height*self.vy
-        self.rect.centerx = hunter.rect.centerx+hunter.rect.width*self.vx
-
-    def update(self):
-        self.life -= 1
-        if self.life < 0:
-            self.kill()
-
-
-class Emp:
-    """
-    enmを発動
-    引数 bombs:Bombインスタンスグループ emys:Enemyインスタンスグループ
-         screen:画面Surface
-    """
-    def __init__(self, bombs: pg.sprite.Group, emys:pg.sprite.Group, screen: pg.Surface):
-        for emy in emys:
-            emy.interval = math.inf
-            emy.image = pg.transform.laplacian(emy.image)
-            emy.image.set_colorkey((0,0,0))
-        for bomb in bombs:
-            bomb.speed /= 2
-        self.image = pg.Surface((WIDTH, HEIGHT))
-        pg.draw.rect = (self.image, (255, 255, 0), (0, 0, 1600, 900))
-        self.image.set_alpha(100)
-        screen.blit(self.image, [0, 0])
-        time.sleep(0.05)
-        pg.display.update()
-        if self.life < 0:
-            self.kill()
 
 
 class Emp:
@@ -510,9 +395,6 @@ class Emp:
 
 
 def main():
-    pg.display.set_caption("真！こうかとん無双")
-    screen = pg.display.set_mode((WIDTH, HEIGHT))
-    bg_img = pg.image.load(f"fig/pg_bg.jpg")
     pg.display.set_caption("真！こうかとん無双")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
     bg_img = pg.image.load(f"fig/pg_bg.jpg")
@@ -585,7 +467,7 @@ def main():
         for emy in emys:
             if emy.state == "stop" and tmr%(5*emy.interval) == 0:
                 # 敵機が停止状態に入ったら，intervalに応じて爆弾投下
-                bombs.add(Bomb(emy, bird))
+                bombs.add(Bomb(emy, hunter))
 
             if tmr%(3*emy.interval) == 0:
                 atk1.add(Atk1(emy))
@@ -594,7 +476,7 @@ def main():
         for emy in pg.sprite.groupcollide(emys, beams, True, True).keys():
             exps.add(Explosion(emy, 100))  # 爆発エフェクト
             score.value += 10  # 10点アップ
-            bird.change_img(6, screen)  # こうかとん喜びエフェクト
+            hunter.change_img(6, screen)  # こうかとん喜びエフェクト
 
         for bomb in pg.sprite.groupcollide(bombs, beams, True, True).keys():
             exps.add(Explosion(bomb, 50))  # 爆発エフェクト
@@ -610,24 +492,37 @@ def main():
         for emy in pg.sprite.groupcollide(emys, gravity, True, False).keys():
             exps.add(Explosion(emy, 50))
 
-        for emy in pg.sprite.spritecollide(bird,atk1,False):
+        for emy in pg.sprite.spritecollide(hunter,atk1,False):
             return  #ダメージを入れる
 
 
-        for bomb in pg.sprite.spritecollide(bird, bombs, True):
+        for bomb in pg.sprite.spritecollide(hunter, bombs, True):
             if state == "hyper":
                 exps.add(Explosion(bomb, 50))
             if state == "normal":
-                bird.change_img(8, screen) # こうかとん悲しみエフェクト
+                hunter.change_img(8, screen) # こうかとん悲しみエフェクト
                 score.update(screen)
                 pg.display.update()
                 time.sleep(2)
                 return
+        
+        if bflag == True:
+            bflag = hunter.brink()
+            state = "hyper"
+            cl = 30
+            Hyper(hunter, screen)
+        else:
+            state = "normal"
+            cl = 50
             
         tmr += 1
         atk1.update(tmr)
         atk1.draw(screen)
-        bird.update(key_lst, screen)
+        hunter.update(key_lst, screen)
+        aa.update(hunter)
+        skill.update(hunter)
+        aa.draw(screen)
+        skill.draw(screen)
         beams.update()
         beams.draw(screen)
         emys.update(tmr)
@@ -642,7 +537,6 @@ def main():
         # shields.update()
         # shields.draw(screen)
         pg.display.update()
-        tmr += 1
         clock.tick(cl)
 
 
