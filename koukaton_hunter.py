@@ -370,6 +370,8 @@ class HP:
 class SP:
     """
     スタミナを管理するクラス
+    引数 sp:HPの設定値int xy:HPバーを表示する左端中央の座標(int, int) 
+         sz:Hpバーのサイズint
     """
     def __init__(self, sp: int, xy: tuple, sz: int):
         self.font = pg.font.SysFont("hgp創英角ﾎﾟｯﾌﾟ体", sz)
@@ -389,7 +391,7 @@ class SP:
         self.rect1.midleft = self.x, self.y+sz*2
         self.rect2.midleft = self.x, self.y+sz*2
 
-    def pay_sp(self, damege: int):  # ダメージを受けた時のメソッド
+    def pay_sp(self, damege: int):  # スタミナを消費した時のメソッド
         if self.sp > self.max_sp:
             self.sp = self.max_sp
         elif self.sp-damege < 0:
@@ -491,6 +493,11 @@ def main():
             score.value += 10  # 10点アップ
             e_hp.damage(10)  # 敵に10ダメージ与える
             bird.change_img(6, screen)  # こうかとん喜びエフェクト
+            if e_hp.hp == 0:  # 敵のHPが0になったとき
+                    score.update(screen)
+                    pg.display.update()
+                    time.sleep(2)
+                    return
 
         for bomb in pg.sprite.groupcollide(bombs, beams, True, True).keys():
             exps.add(Explosion(bomb, 50))  # 爆発エフェクト
