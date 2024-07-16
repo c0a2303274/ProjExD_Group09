@@ -12,6 +12,13 @@ WIDTH = 1100  # ゲームウィンドウの幅
 HEIGHT = 650  # ゲームウィンドウの高さ
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
+def update_background(score_value, current_bg_index, bg_images):
+    """
+    背景の変更条件
+    """
+    
+    current_bg_index = random.randint(0, len(bg_images) - 1)
+    return current_bg_index
 
 def check_bound(obj_rct: pg.Rect) -> tuple[bool, bool]:
     """
@@ -105,7 +112,6 @@ class Hunter(pg.sprite.Sprite):
         押下キーに応じてHunterを移動させる
         引数1 key_lst：押下キーの真理値リスト
         引数2 screen：画面Surface
-        無敵の発動条件、発動時間、消費スコアの設定
         無敵の発動条件、発動時間、消費スコアの設定
         """
         sum_mv = [0, 0]
@@ -275,15 +281,15 @@ class Monster(pg.sprite.Sprite):
         if self.flag == False:
             self.vx = random.randint(-150,150)  #x座標移動
             if self.rect.centerx-50 >= WIDTH:
-                self.vx = random.randint(-150,-180)
+                self.rect.centerx = random.randint(-150,-180)
             if self.rect.centerx+50 <= 0:
-                self.vx = random.randint(150,180)
+                self.rect.centerx = random.randint(150,180)
 
             self.vy = random.randint(-150,150)  #y座標移動
             if self.rect.centery-50 >= HEIGHT:
-                self.vy = random.randint(-150,-180)
+                self.rect.centery = random.randint(-150,-180)
             if self.rect.centery+50 <= 0:
-                self.vy = random.randint(150,180)
+                self.rect.centery = random.randint(150,180)
         self.rect.move_ip(self.vx, self.vy)
         if not self.flag:
             self.flag = True
@@ -427,6 +433,8 @@ class item_a_efe():
     """"
     鬼人薬のエフェクト
     """
+    imgs = [pg.image.load(f"fig/alien{i}.png") for i in range(1, 4)]
+    
     def __init__(self):
         self.font = pg.font.SysFont("hgp創英角ﾎﾟｯﾌﾟ体", 40)
         self.color = (255, 0, 0)
@@ -598,9 +606,18 @@ class SP:
 
 
 def main():
-    pg.display.set_caption("こうかとん狩猟DX")
+    pg.display.set_caption("こうかとん狩猟")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
-    bg_img = pg.image.load(f"fig/pg_bg.jpg")
+    bg_images = [
+        pg.image.load("fig/bg1.jpg"),  # 画像
+        pg.image.load("fig/bg2.jpg"),
+        pg.image.load("fig/bg3.jpg"),
+        pg.image.load("fig/bg4.jpg"),
+        pg.image.load("fig/bg5.jpg"),
+        pg.image.load("fig/bg6.jpg")]  # 画像のリスト
+    
+    current_bg_index = 0
+
     score = Score()
 
     Item_h = item_h()
@@ -618,7 +635,7 @@ def main():
     beams = pg.sprite.Group()
     exps = pg.sprite.Group()
     emys = pg.sprite.Group()
-    shields = pg.sprite.Group() 
+    # shields = pg.sprite.Group() 
     gravity = pg.sprite.Group()
     Item_a_efe = item_a_efe()
     atk1 = pg.sprite.Group()
@@ -641,6 +658,7 @@ def main():
     bflag = False
     hyper_life = 10
     emys.add(Monster())
+    background_flag = 0
     while True:
         aflag = False
         key_lst = pg.key.get_pressed()
@@ -668,6 +686,17 @@ def main():
                         aflag = True
                         skill.add(Attack(hunter, 2))
 
+            if background_flag == 0 and e_hp.hp <= 10000:
+                current_bg_index = update_background(score.value, current_bg_index, bg_images)#追加した
+                background_flag = 1
+
+            if background_flag == 1 and e_hp.hp <= 50000:
+                current_bg_index = update_background(score.value, current_bg_index, bg_images)#追加した
+                background_flag = 2
+
+            if background_flag == 2 and e_hp.hp <= 25000:
+                current_bg_index = update_background(score.value, current_bg_index, bg_images)#追加した
+                background_flag = 3
             if event.type == pg.KEYDOWN and event.key == pg.K_i:   #回復薬
                 if Item_h.value >= 1:
                     if k_hp.hp <= 700:
@@ -708,7 +737,7 @@ def main():
                     # image = pg.transform.rotozoom(pg.image.load(f"fig/{num}.png"), 0, 2.0)  # 元の画像に戻す
 
             # screen.blit(image, pg.rect)
-        screen.blit(bg_img, [0, 0])
+        screen.blit(bg_images[current_bg_index], [0, 0])
 
 
         for emy in emys:
@@ -750,9 +779,9 @@ def main():
             exps.add(Explosion(bomb, 50))  # 爆発エフェクト
             score.value += 1  # 1点アップ
         
-        for shield in pg.sprite.groupcollide(bombs, shields, True, True).keys():
-            exps.add(Explosion(shield, 50))  # 爆発エフェクト
-            score.value += 1  # 1点アップ
+        # for shield in pg.sprite.groupcollide(bombs, shields, True, True).keys():
+        #     exps.add(Explosion(shield, 50))  # 爆発エフェクト
+        #     score.value += 1  # 1点アップ
 
         for bomb in pg.sprite.groupcollide(bombs, gravity, True, False).keys():
             exps.add(Explosion(bomb, 50))
@@ -761,7 +790,8 @@ def main():
             exps.add(Explosion(emy, 50))
 
         for emy in pg.sprite.spritecollide(hunter,atk1,False):
-            k_hp.damage(5)
+            if state == "normal":
+                k_hp.damage(5)
             if k_hp.hp == 0:
                     hunter.change_img(8, screen) # こうかとん悲しみエフェクト
                     score.update(screen)
