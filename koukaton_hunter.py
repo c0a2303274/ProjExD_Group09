@@ -1,3 +1,4 @@
+
 import math
 import os
 import random
@@ -11,6 +12,13 @@ WIDTH = 1100  # ゲームウィンドウの幅
 HEIGHT = 650  # ゲームウィンドウの高さ
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
+def update_background(score_value, current_bg_index, bg_images):
+    """
+    背景の変更条件
+    """
+    
+    current_bg_index = random.randint(0, len(bg_images) - 1)
+    return current_bg_index
 
 def check_bound(obj_rct: pg.Rect) -> tuple[bool, bool]:
     """
@@ -104,6 +112,7 @@ class Hunter(pg.sprite.Sprite):
         押下キーに応じてHunterを移動させる
         引数1 key_lst：押下キーの真理値リスト
         引数2 screen：画面Surface
+        無敵の発動条件、発動時間、消費スコアの設定
         """
         sum_mv = [0, 0]
         for k, mv in __class__.delta.items():
@@ -167,89 +176,20 @@ class Attack(pg.sprite.Sprite):
 
         
 
-class bird(pg.sprite.Sprite):
-    """
-    ゲームキャラクター（こうかとん）に関するクラス
-    """
-    delta = {  # 押下キーと移動量の辞書
-        pg.K_UP: (0, -1),
-        pg.K_DOWN: (0, +1),
-        pg.K_LEFT: (-1, 0),
-        pg.K_RIGHT: (+1, 0),
-    }
-
-    def __init__(self, num: int, xy: tuple[int, int]):
-        """
-        こうかとん画像Surfaceを生成する
-        引数1 num：こうかとん画像ファイル名の番号
-        引数2 xy：こうかとん画像の位置座標タプル
-        """
-        super().__init__()
-        img0 = pg.transform.rotozoom(pg.image.load(f"fig/{num}.png"), 0, 2.0)
-        image = pg.transform.flip(img0, True, False)  # デフォルトのこうかとん
-        self.imgs = {
-            (+1, 0): image,  # 右
-            (+1, -1): pg.transform.rotozoom(image, 45, 1.0),  # 右上
-            (0, -1): pg.transform.rotozoom(image, 90, 1.0),  # 上
-            (-1, -1): pg.transform.rotozoom(img0, -45, 1.0),  # 左上
-            (-1, 0): img0,  # 左
-            (-1, +1): pg.transform.rotozoom(img0, 45, 1.0),  # 左下
-            (0, +1): pg.transform.rotozoom(image, -90, 1.0),  # 下
-            (+1, +1): pg.transform.rotozoom(image, -45, 1.0),  # 右下
-        }
-        self.dire = (+1, 0)
-        self.image = self.imgs[self.dire]
-        self.rect = self.image.get_rect()
-        self.rect.center = xy
-        self.speed = 10
-        # self.state = "normal"
-        # self.hyper_life = 0
-        # self.value = 0
-
-    def change_img(self, num: int, screen: pg.Surface):
-        """
-        こうかとん画像を切り替え，画面に転送する
-        引数1 num：こうかとん画像ファイル名の番号
-        引数2 screen：画面Surface
-        """
-        self.image = pg.transform.rotozoom(pg.image.load(f"fig/{num}.png"), 0, 2.0)
-        screen.blit(self.image, self.rect)
-
-    def update(self, key_lst: list[bool], screen: pg.Surface):
-        """
-        押下キーに応じてこうかとんを移動させる
-        引数1 key_lst：押下キーの真理値リスト
-        引数2 screen：画面Surface
-        無敵の発動条件、発動時間、消費スコアの設定
-        """
-        sum_mv = [0, 0]
-        for k, mv in __class__.delta.items():
-            if key_lst[k]:
-                sum_mv[0] += mv[0]
-                sum_mv[1] += mv[1]
-        self.rect.move_ip(self.speed * sum_mv[0], self.speed * sum_mv[1])
-        if check_bound(self.rect) != (True, True):
-            self.rect.move_ip(-self.speed * sum_mv[0], -self.speed * sum_mv[1])
-        if not (sum_mv[0] == 0 and sum_mv[1] == 0):
-            self.dire = tuple(sum_mv)
-            self.image = self.imgs[self.dire]
-        screen.blit(self.image, self.rect)
-
-
 class Bomb(pg.sprite.Sprite):
     """
     爆弾に関するクラス
     """
     colors = [(255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 255, 0), (255, 0, 255), (0, 255, 255)]
 
-    def __init__(self, emy: "Enemy", hunter: Hunter):
+    def __init__(self, emy: "Monster", hunter:Hunter):
         """
         爆弾円Surfaceを生成する
         引数1 emy：爆弾を投下する敵機
         引数2 hunter：攻撃対象のこうかとん
         """
         super().__init__()
-        rad = random.randint(10, 50)  # 爆弾円の半径：10以上50以下の乱数
+        rad = (100)  # 爆弾円の半径：75
         self.image = pg.Surface((2*rad, 2*rad))
         color = random.choice(__class__.colors)  # 爆弾円の色：クラス変数からランダム選択
         pg.draw.circle(self.image, color, (rad, rad), rad)
@@ -259,7 +199,7 @@ class Bomb(pg.sprite.Sprite):
         self.vx, self.vy = calc_orientation(emy.rect, hunter.rect)  
         self.rect.centerx = emy.rect.centerx
         self.rect.centery = emy.rect.centery+emy.rect.height//2
-        self.speed = 6
+        self.speed = 15
 
     def update(self):
         """
@@ -270,66 +210,19 @@ class Bomb(pg.sprite.Sprite):
         if check_bound(self.rect) != (True, True):
             self.kill()
 
-
-class Beam(pg.sprite.Sprite):
-    """
-    ビームに関するクラス
-    """
-    def __init__(self, hunter: Hunter, angle0: int = 0):
-        """
-        ビーム画像Surfaceを生成する
-        引数 hunter：ビームを放つこうかとん
-        """
-        super().__init__()
-        self.vx, self.vy = hunter.dire
-        angle = math.degrees(math.atan2(-self.vy, self.vx)) + angle0
-        self.image = pg.transform.rotozoom(pg.image.load(f"fig/beam.png"), angle, 2.0)
-        self.vx = math.cos(math.radians(angle))
-        self.vy = -math.sin(math.radians(angle))
-        self.rect = self.image.get_rect()
-        self.rect.centery = hunter.rect.centery+hunter.rect.height*self.vy
-        self.rect.centerx = hunter.rect.centerx+hunter.rect.width*self.vx
-        self.speed = 10
-
-    def update(self):
-        """
-        ビームを速度ベクトルself.vx, self.vyに基づき移動させる
-        引数 screen：画面Surface
-        """
-        self.rect.move_ip(self.speed*self.vx, self.speed*self.vy)
-        if check_bound(self.rect) != (True, True):
-            self.kill()
-
-class NeoBeam(Beam):
-    def __init__(self, hunter: Hunter, num: int):
-        super().__init__(hunter)
-        self.hunter = hunter
-        self.num = num
-        # NeoBeam.gen_beams(self)
-
-    def gen_beams(self):
-        bls = []
-        bnum = range(-50, +51, 100 // (self.num - 1))
-        for i in bnum:
-            bls.append(Beam(self.hunter, i))
-        return bls
-
-
-
-
 class Explosion(pg.sprite.Sprite):
     """
     爆発に関するクラス
     """
-    def __init__(self, obj: "Bomb|Enemy", life: int):
+    def __init__(self, obj: "Bomb|Monster", life: int):
         """
         爆弾が爆発するエフェクトを生成する
         引数1 obj：爆発するBombまたは敵機インスタンス
         引数2 life：爆発時間
         """
         super().__init__()
-        image = pg.image.load(f"fig/explosion.gif")
-        self.imgs = [image, pg.transform.flip(image, 1, 1)]
+        img = pg.image.load(f"fig/explosion.gif")
+        self.imgs = [img, pg.transform.flip(img, 1, 1)]
         self.image = self.imgs[0]
         self.rect = self.image.get_rect(center=obj.rect.center)
         self.life = life
@@ -357,35 +250,201 @@ class Gravity(pg.sprite.Sprite):
         self.life -= 1
         if self.life < 0:
             self.kill()
-        # screen.blit(self.image, self.rct)
+        # screen.blit(self.img, self.rct)
 
 
-class Enemy(pg.sprite.Sprite):
+class Monster(pg.sprite.Sprite):
     """
-    敵機に関するクラス
+    こうかとんに関するクラス
     """
-    imgs = [pg.image.load(f"fig/alien{i}.png") for i in range(1, 4)]
+    imgs = [pg.image.load(f"fig/9.png")]
     
     def __init__(self):
         super().__init__()
         self.image = random.choice(__class__.imgs)
         self.rect = self.image.get_rect()
-        self.rect.center = random.randint(0, WIDTH), 0
-        self.vx, self.vy = 0, +6
-        self.bound = random.randint(50, HEIGHT//2)  # 停止位置
+        self.rect.center = random.randint(WIDTH/2 - 100, WIDTH/2 + 1-00), random.randint(HEIGHT/2 - 100,HEIGHT/2 + 100)
+        self.vx, self.vy = 0,0
+        #self.bound = random.randint(50, HEIGHT)  # 停止位置
         self.state = "down"  # 降下状態or停止状態
-        self.interval = random.randint(50, 300)  # 爆弾投下インターバル
+        self.interval = 100  # 攻撃インターバル
+        self.flag = True
 
-    def update(self):
-        """
-        敵機を速度ベクトルself.vyに基づき移動（降下）させる
-        ランダムに決めた停止位置_boundまで降下したら，_stateを停止状態に変更する
-        引数 screen：画面Surface
-        """
-        if self.rect.centery > self.bound:
+
+    def update(self,tmr):
+        if self.flag == True:
+            self.vx = 0
             self.vy = 0
             self.state = "stop"
+            if tmr%300 <= 1:
+                self.flag = False
+        if self.flag == False:
+            self.vx = random.randint(-150,150)  #x座標移動
+            if self.rect.centerx-50 >= WIDTH:
+                self.rect.centerx = random.randint(-150,-180)
+            if self.rect.centerx+50 <= 0:
+                self.rect.centerx = random.randint(150,180)
+
+            self.vy = random.randint(-150,150)  #y座標移動
+            if self.rect.centery-50 >= HEIGHT:
+                self.rect.centery = random.randint(-150,-180)
+            if self.rect.centery+50 <= 0:
+                self.rect.centery = random.randint(150,180)
         self.rect.move_ip(self.vx, self.vy)
+        if not self.flag:
+            self.flag = True
+class Atk1(pg.sprite.Sprite):
+    colors = [(255, 0, 0), (0, 255, 0), (0, 0, 255), (255, 255, 0), (255, 0, 255), (0, 255, 255)]
+    def __init__(self, emy:"Monster"):
+        super().__init__()
+        rad = (200)  
+        self.image = pg.Surface((2*rad, 2*rad))
+        color = random.choice(__class__.colors) 
+        pg.draw.circle(self.image, color, (rad, rad), rad)
+        self.image.set_colorkey((0, 0, 0))
+        self.rect = self.image.get_rect()
+        self.rect.centerx = emy.rect.centerx
+        self.rect.centery = emy.rect.centery
+        print(self.rect.centerx,emy.rect.centerx)
+    
+
+    def update(self,tmr):
+        if tmr%300 ==100:
+            self.kill()
+
+
+class item_h(pg.sprite.Sprite):
+    """"
+    回復薬の管理
+    """
+    def __init__(self):
+        self.font = pg.font.SysFont("hgp創英角ﾎﾟｯﾌﾟ体", 40)
+        self.color = (0, 180, 0)
+        self.value = 3
+        self.image = self.font.render(f"回復薬: {self.value}", 0, self.color)
+        self.rect = self.image.get_rect()
+        self.rect.center = 1010, HEIGHT-100
+
+    def update(self, screen: pg.Surface):
+        self.image = self.font.render(f"回復薬: {self.value}", 0, self.color)
+        screen.blit(self.image, self.rect)
+
+
+class item_k(pg.sprite.Sprite):
+    """"
+    強走薬の管理
+    """
+    def __init__(self):
+        self.font = pg.font.SysFont("hgp創英角ﾎﾟｯﾌﾟ体", 40)
+        self.color = (255, 255, 0)
+        self.value = 3
+        self.image = self.font.render(f"強走薬: {self.value}", 0, self.color)
+        self.rect = self.image.get_rect()
+        self.rect.center = 1010, HEIGHT-60
+
+    def update(self, screen: pg.Surface):
+        self.image = self.font.render(f"強走薬: {self.value}", 0, self.color)
+        screen.blit(self.image, self.rect)
+
+class item_a(pg.sprite.Sprite):
+    """"
+    鬼人薬の管理
+    """
+    def __init__(self):
+        self.font = pg.font.SysFont("hgp創英角ﾎﾟｯﾌﾟ体", 40)
+        self.color = (255, 0, 0)
+        self.value = 3
+        self.image = self.font.render(f"鬼人薬: {self.value}", 0, self.color)
+        self.rect = self.image.get_rect()
+        self.rect.center = 1010, HEIGHT-20
+
+    def update(self, screen: pg.Surface):
+        self.image = self.font.render(f"鬼人薬: {self.value}", 0, self.color)
+        screen.blit(self.image, self.rect)
+
+
+class item_a_efe():
+    """"
+    鬼人薬のエフェクト
+    """
+    def __init__(self):
+        self.font = pg.font.SysFont("hgp創英角ﾎﾟｯﾌﾟ体", 40)
+        self.color = (255, 0, 0)
+        self.image = self.font.render(f"UP中！", 0, self.color)
+        self.rect = self.image.get_rect()
+        self.rect.center = 800, HEIGHT-20
+
+    def update(self, screen: pg.Surface):
+        self.image = self.font.render(f"UP中！", 0, self.color)
+        screen.blit(self.image, self.rect)
+
+
+class item_h(pg.sprite.Sprite):
+    """"
+    回復薬の管理
+    """
+    def __init__(self):
+        self.font = pg.font.SysFont("hgp創英角ﾎﾟｯﾌﾟ体", 40)
+        self.color = (0, 180, 0)
+        self.value = 3
+        self.image = self.font.render(f"回復薬: {self.value}", 0, self.color)
+        self.rect = self.image.get_rect()
+        self.rect.center = 1010, HEIGHT-100
+
+    def update(self, screen: pg.Surface):
+        self.image = self.font.render(f"回復薬: {self.value}", 0, self.color)
+        screen.blit(self.image, self.rect)
+
+
+class item_k(pg.sprite.Sprite):
+    """"
+    強走薬の管理
+    """
+    def __init__(self):
+        self.font = pg.font.SysFont("hgp創英角ﾎﾟｯﾌﾟ体", 40)
+        self.color = (255, 255, 0)
+        self.value = 3
+        self.image = self.font.render(f"強走薬: {self.value}", 0, self.color)
+        self.rect = self.image.get_rect()
+        self.rect.center = 1010, HEIGHT-60
+
+    def update(self, screen: pg.Surface):
+        self.image = self.font.render(f"強走薬: {self.value}", 0, self.color)
+        screen.blit(self.image, self.rect)
+
+class item_a(pg.sprite.Sprite):
+    """"
+    鬼人薬の管理
+    """
+    def __init__(self):
+        self.font = pg.font.SysFont("hgp創英角ﾎﾟｯﾌﾟ体", 40)
+        self.color = (255, 0, 0)
+        self.value = 3
+        self.image = self.font.render(f"鬼人薬: {self.value}", 0, self.color)
+        self.rect = self.image.get_rect()
+        self.rect.center = 1010, HEIGHT-20
+
+    def update(self, screen: pg.Surface):
+        self.image = self.font.render(f"鬼人薬: {self.value}", 0, self.color)
+        screen.blit(self.image, self.rect)
+
+
+class item_a_efe():
+    """"
+    鬼人薬のエフェクト
+    """
+    imgs = [pg.image.load(f"fig/alien{i}.png") for i in range(1, 4)]
+    
+    def __init__(self):
+        self.font = pg.font.SysFont("hgp創英角ﾎﾟｯﾌﾟ体", 40)
+        self.color = (255, 0, 0)
+        self.image = self.font.render(f"UP中！", 0, self.color)
+        self.rect = self.image.get_rect()
+        self.rect.center = 800, HEIGHT-20
+
+    def update(self, screen: pg.Surface):
+        self.image = self.font.render(f"UP中！", 0, self.color)
+        screen.blit(self.image, self.rect)
 
 
 class Score:
@@ -394,6 +453,8 @@ class Score:
     爆弾：1点
     敵機：10点
     """
+    imgs = [pg.image.load(f"fig/alien{i}.png") for i in range(1, 4)]
+    
     def __init__(self):
         self.font = pg.font.Font(None, 50)
         self.color = (0, 0, 255)
@@ -402,7 +463,36 @@ class Score:
         self.rect = self.image.get_rect()
         self.rect.center = 100, HEIGHT-50
 
+        self.value = 400
+        self.image = self.font.render(f"Score: {self.value}", 0, self.color)
+        self.rect = self.image.get_rect()
+        self.rect.center = 100, HEIGHT-50
+
     def update(self, screen: pg.Surface):
+        self.image = self.font.render(f"Score: {self.value}", 0, self.color)
+        screen.blit(self.image, self.rect)
+
+
+class Shield(pg.sprite.Sprite):
+    """
+    こうかとんの前に防御壁を出現させ、着弾を防ぐクラス
+    """
+    def __init__(self, hunter:Hunter, life: int):
+        super().__init__()
+        self.size = (20, hunter.rect.height*2)  # 大きさのタプル
+        self.image = pg.Surface(self.size)  # 空のSurfaceを作成
+        self.life = life  # 発動時間の設定
+        self.color = (0, 0, 255)  # 矩形の色を青色に指定
+        pg.draw.rect(self.image, self.color, (0, 0, 20, hunter.rect.height*2))
+        self.vx, self.vy = hunter.dire
+        angle = math.degrees(math.atan2(-self.vy, self.vx))
+        self.image = pg.transform.rotozoom(self.image, angle, 1.0)
+        self.image.set_colorkey((0, 0, 0))
+        self.rect = self.image.get_rect()
+        self.rect.centery = hunter.rect.centery+hunter.rect.height*self.vy
+        self.rect.centerx = hunter.rect.centerx+hunter.rect.width*self.vx
+
+    def update(self, screen):
         self.image = self.font.render(f"Score: {self.value}", 0, self.color)
         screen.blit(self.image, self.rect)
 
@@ -425,57 +515,118 @@ class Hyper:
         screen.blit(self.img, [0, 0])
         
 
-class Shield(pg.sprite.Sprite):
+class HP:
     """
-    こうかとんの前に防御壁を出現させ、着弾を防ぐクラス
+    HPを管理するクラス
+    引数 hp:HPの設定値int name:HPバーに表示する名前str
+         xy:HPバーを表示する左端中央の座標(int, int) sz:Hpバーのサイズint
     """
-    def __init__(self, hunter: Hunter, life: int):
-        super().__init__()
-        self.size = (20, hunter.rect.height*2)  # 大きさのタプル
-        self.image = pg.Surface(self.size)  # 空のSurfaceを作成
-        self.life = life  # 発動時間の設定
-        self.color = (0, 0, 255)  # 矩形の色を青色に指定
-        pg.draw.rect(self.image, self.color, (0, 0, 20, hunter.rect.height*2))
-        self.vx, self.vy = hunter.dire
-        angle = math.degrees(math.atan2(-self.vy, self.vx))
-        self.image = pg.transform.rotozoom(self.image, angle, 1.0)
-        self.image.set_colorkey((0, 0, 0))
-        self.rect = self.image.get_rect()
-        self.rect.centery = hunter.rect.centery+hunter.rect.height*self.vy
-        self.rect.centerx = hunter.rect.centerx+hunter.rect.width*self.vx
+    def __init__(self, hp: int, name: str, xy: tuple, sz: int):
+        self.font = pg.font.SysFont("hgp創英角ﾎﾟｯﾌﾟ体", sz)
+        self.color = (0, 200, 0)
+        self.max_hp = hp
+        self.hp = hp
+        self.name = name
+        self.x = xy[0]
+        self.y = xy[1]
+        self.size = sz*30, sz*2
+        self.image1 = pg.Surface(self.size)
+        pg.draw.rect(self.image1, (0, 0, 0), (0, 0, self.size[0], self.size[1]))
+        pg.draw.rect(self.image1, self.color, (0, 0, self.size[0]*self.hp/self.max_hp, self.size[1]))
+        self.image2 = self.font.render(f"{self.name} : {self.hp}/{self.max_hp}", 0, (255, 255, 255))
+        self.rect1 = self.image1.get_rect()
+        self.rect2 = self.image2.get_rect()
+        self.rect1.midleft = self.x, self.y
+        self.rect2.midleft = self.x, self.y
 
-    def update(self):
-        self.life -= 1
-        if self.life < 0:
-            self.kill()
+    def damage(self, damege: int):  # ダメージを受けた時のメソッド
+        self.hp -= damege
+        if self.hp > self.max_hp:
+            self.hp = self.max_hp
+        elif self.hp < 0:
+            self.hp = 0
+
+    def update(self, screen: pg.Surface):  # HPゲージの更新
+        if self.hp <= (self.max_hp*0.5):
+            self.color = (200, 200, 0)
+        if self.hp <= (self.max_hp*0.2):
+            self.color = (200, 0, 0)
+        pg.draw.rect(self.image1, (0, 0, 0), (0, 0, self.size[0], self.size[1]))
+        pg.draw.rect(self.image1, self.color, (0, 0, self.size[0]*self.hp/self.max_hp, self.size[1]))
+        self.image2 = self.font.render(f"{self.name} : {self.hp}/{self.max_hp}", 0, (255, 255, 255))
+        screen.blit(self.image1, self.rect1)
+        screen.blit(self.image2, self.rect2)
 
 
-class Emp:
+class SP:
     """
-    enmを発動
-    引数 bombs:Bombインスタンスグループ emys:Enemyインスタンスグループ
-         screen:画面Surface
+    スタミナを管理するクラス
+    引数 sp:HPの設定値int xy:HPバーを表示する左端中央の座標(int, int) 
+         sz:Hpバーのサイズint
     """
-    def __init__(self, bombs: pg.sprite.Group, emys:pg.sprite.Group, screen: pg.Surface):
-        for emy in emys:
-            emy.interval = math.inf
-            emy.image = pg.transform.laplacian(emy.image)
-            emy.image.set_colorkey((0,0,0))
-        for bomb in bombs:
-            bomb.speed /= 2
-        self.image = pg.Surface((WIDTH, HEIGHT))
-        pg.draw.rect = (self.image, (255, 255, 0), (0, 0, 1600, 900))
-        self.image.set_alpha(100)
-        screen.blit(self.image, [0, 0])
-        time.sleep(0.05)
-        pg.display.update()
+    def __init__(self, sp: int, xy: tuple, sz: int):
+        self.font = pg.font.SysFont("hgp創英角ﾎﾟｯﾌﾟ体", sz)
+        self.color = (240, 120, 0)
+        self.max_sp = sp
+        self.sp = sp
+        self.nsp = 0.25
+        self.x = xy[0]
+        self.y = xy[1]
+        self.size = sz*25, sz
+        self.image1 = pg.Surface(self.size)
+        pg.draw.rect(self.image1, (0, 0, 0), (0, 0, self.size[0], self.size[1]))
+        pg.draw.rect(self.image1, self.color, (0, 0, self.size[0]*self.sp/self.max_sp, self.size[1]))
+        self.image2 = self.font.render(f"SP: {self.sp}/{self.max_sp}", 0, (255, 255, 255))
+        self.rect1 = self.image1.get_rect()
+        self.rect2 = self.image2.get_rect()
+        self.rect1.midleft = self.x, self.y+sz*2
+        self.rect2.midleft = self.x, self.y+sz*2
+
+    def pay_sp(self, damege: int):  # スタミナを消費した時のメソッド
+        if self.sp > self.max_sp:
+            self.sp = self.max_sp
+        elif self.sp-damege < 0:
+            self.sp = 0
+        else:
+            self.sp -= damege
+
+    def update(self, screen: pg.Surface):  # SPゲージの更新
+        if self.sp == self.max_sp:
+            self.nsp = 0.25
+        elif self.sp <= 5:
+            self.nsp = 0.125
+        self.sp += self.nsp
+        if self.sp > self.max_sp:
+            self.sp = self.max_sp
+        pg.draw.rect(self.image1, (0, 0, 0), (0, 0, self.size[0], self.size[1]))
+        pg.draw.rect(self.image1, self.color, (0, 0, self.size[0]*self.sp/self.max_sp, self.size[1]))
+        self.image2 = self.font.render(f"SP: {int(self.sp)}/{self.max_sp}", 0, (255, 255, 255))
+        screen.blit(self.image1, self.rect1)
+        screen.blit(self.image2, self.rect2)
 
 
 def main():
-    pg.display.set_caption("真！こうかとん無双")
+    pg.display.set_caption("こうかとん狩猟")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
-    bg_img = pg.image.load(f"fig/pg_bg.jpg")
+    bg_images = [
+        pg.image.load("fig/bg1.jpg"),  # 画像
+        pg.image.load("fig/bg2.jpg"),
+        pg.image.load("fig/bg3.jpg"),
+        pg.image.load("fig/bg4.jpg"),
+        pg.image.load("fig/bg5.jpg"),
+        pg.image.load("fig/bg6.jpg")]  # 画像のリスト
+    
+    current_bg_index = 0
+
     score = Score()
+
+    Item_h = item_h()
+    Item_k = item_k()
+    Item_a = item_a()
+
+    Item_h = item_h()
+    Item_k = item_k()
+    Item_a = item_a()
 
     hunter = Hunter(3, (900, 400))
     aa = pg.sprite.Group()
@@ -484,15 +635,30 @@ def main():
     beams = pg.sprite.Group()
     exps = pg.sprite.Group()
     emys = pg.sprite.Group()
-    shields = pg.sprite.Group() 
+    # shields = pg.sprite.Group() 
     gravity = pg.sprite.Group()
+    Item_a_efe = item_a_efe()
+    atk1 = pg.sprite.Group()
 
     tmr = 0
     cl = 50
+
+    k_hp = HP(1000, "Massun", (30, 100), 12)
+    k_sp = SP(100, (30, 100), 12)
+    e_hp = HP(15000, "コウカトン", (240, 40), 20)
+    Item_a_efe = item_a_efe()
+
+    at = 1
+    add_sp = 0
+    a_co = 500
+    sp_co = 500
+    tmr = 0
     clock = pg.time.Clock()
     state = "normal"
     bflag = False
     hyper_life = 10
+    emys.add(Monster())
+    background_flag = 0
     while True:
         aflag = False
         key_lst = pg.key.get_pressed()
@@ -513,11 +679,50 @@ def main():
             #     if score.value >= 20:  #電磁パルス
             #         Emp(bombs, emys, screen)
             #         score.value -= 20
-
             if event.type == pg.KEYDOWN and event.key == pg.K_RETURN:
                 if not aflag:
-                    aflag = True
-                    skill.add(Attack(hunter, 2))
+                    if k_sp.sp >= 30:
+                        k_sp.pay_sp(30)
+                        aflag = True
+                        skill.add(Attack(hunter, 2))
+
+            if background_flag == 0 and e_hp.hp <= 10000:
+                current_bg_index = update_background(score.value, current_bg_index, bg_images)#追加した
+                background_flag = 1
+
+            if background_flag == 1 and e_hp.hp <= 50000:
+                current_bg_index = update_background(score.value, current_bg_index, bg_images)#追加した
+                background_flag = 2
+
+            if background_flag == 2 and e_hp.hp <= 25000:
+                current_bg_index = update_background(score.value, current_bg_index, bg_images)#追加した
+                background_flag = 3
+            if event.type == pg.KEYDOWN and event.key == pg.K_i:   #回復薬
+                if Item_h.value >= 1:
+                    if k_hp.hp <= 700:
+                        Item_h.value -= 1
+                        k_hp.damage(-300)       
+            if event.type == pg.KEYDOWN and event.key == pg.K_k:   #強走薬
+                if Item_k.value >= 1:
+                    k_sp.max_sp = 200
+                    k_sp.sp += 100
+                    add_sp = 2 
+                    Item_k.value -= 1
+            if event.type == pg.KEYDOWN and event.key == pg.K_j:   #鬼人薬
+                if Item_a.value >= 1:
+                    Item_a.value -= 1
+                    at = 2         #攻撃力UP
+        if add_sp == 2:
+                sp_co -= 1
+                if sp_co <= 0:
+                    k_sp.max_sp = 100
+                    add_sp = 1
+                    sp_co = 500
+        if at == 2:
+                a_co -= 1
+                if a_co <= 0:
+                    at = 1
+                    a_co = 500
             #無敵発動する方法と条件
         #     if key_lst[pg.K_RSHIFT] and score.value >= 100 and state == "normal":
         #         state = "hyper"
@@ -532,35 +737,57 @@ def main():
                     # image = pg.transform.rotozoom(pg.image.load(f"fig/{num}.png"), 0, 2.0)  # 元の画像に戻す
 
             # screen.blit(image, pg.rect)
-        screen.blit(bg_img, [0, 0])
+        screen.blit(bg_images[current_bg_index], [0, 0])
 
-        if tmr%100 == 0:  # 200フレームに1回，敵機を出現させる
-            emys.add(Enemy())
 
         for emy in emys:
-            if emy.state == "stop" and tmr%emy.interval == 0:
+            if emy.state == "stop" and tmr%(5*emy.interval) == 0:
                 # 敵機が停止状態に入ったら，intervalに応じて爆弾投下
                 bombs.add(Bomb(emy, hunter))
 
-        for emy in pg.sprite.groupcollide(emys, aa or skill, True, False).keys():
-            exps.add(Explosion(emy, 100))  # 爆発エフェクト
-            # k_hp.damage()
-            score.value += 10  # 10点アップ
-            hunter.change_img(6, screen)  # こうかとん喜びエフェクト
+            if tmr%(3*emy.interval) == 0:
+                atk1.add(Atk1(emy))
+            
 
-        # for bomb in pg.sprite.groupcollide(bombs, beams, True, True).keys():
-        #     exps.add(Explosion(bomb, 50))  # 爆発エフェクト
-        #     score.value += 1  # 1点アップ
+        for emy in pg.sprite.groupcollide(emys, aa, False, False).keys():
+            e_hp.damage(6 * at)
+            if e_hp.hp == 0:
+                color = [255, 255, 255]
+                font = pg.font.SysFont("hgp創英角ﾎﾟｯﾌﾟ体", 20)
+                word = "GameClear"
+                image = font.render(f"{word}", 0, color)
+                image.blit(screen, [WIDTH / 2, HEIGHT / 2])
+                score.update(screen)
+                pg.display.update()
+                time.sleep(2)
+                return
+            
+        for emy in pg.sprite.groupcollide(emys, skill, False, False).keys():
+            e_hp.damage(18 * at)
+            if e_hp.hp == 0:
+                color = [255, 255, 255]
+                font = pg.font.SysFont("hgp創英角ﾎﾟｯﾌﾟ体", 20)
+                word = "GameClear"
+                image = font.render(f"{word}", 0, color)
+                image.blit(screen, [WIDTH / 2, HEIGHT / 2])
+                score.update(screen)
+                pg.display.update()
+                time.sleep(2)
+                return
+
+        for bomb in pg.sprite.groupcollide(bombs, beams, True, True).keys():
+            exps.add(Explosion(bomb, 50))  # 爆発エフェクト
+            score.value += 1  # 1点アップ
         
         # for shield in pg.sprite.groupcollide(bombs, shields, True, True).keys():
         #     exps.add(Explosion(shield, 50))  # 爆発エフェクト
         #     score.value += 1  # 1点アップ
 
-        # for bomb in pg.sprite.groupcollide(bombs, gravity, True, False).keys():
-        #     exps.add(Explosion(bomb, 50))
+        for bomb in pg.sprite.groupcollide(bombs, gravity, True, False).keys():
+            exps.add(Explosion(bomb, 50))
 
-        # for emy in pg.sprite.groupcollide(emys, gravity, True, False).keys():
-        #     exps.add(Explosion(emy, 50))
+        for emy in pg.sprite.groupcollide(emys, gravity, True, False).keys():
+            exps.add(Explosion(emy, 50))
 
         for emy in pg.sprite.spritecollide(hunter, emys, False):
             if state == "normal":
@@ -569,15 +796,30 @@ def main():
                 pg.display.update()
                 time.sleep(2)
                 return
-
-        for bomb in pg.sprite.spritecollide(hunter, bombs, False):
+        for emy in pg.sprite.spritecollide(hunter,atk1,False):
             if state == "normal":
-                hunter.change_img(8, screen) # こうかとん悲しみエフェクト
-                score.update(screen)
-                pg.display.update()
-                time.sleep(2)
-                return
-            
+                k_hp.damage(5)
+            if k_hp.hp == 0:
+                    hunter.change_img(8, screen) # こうかとん悲しみエフェクト
+                    score.update(screen)
+                    pg.display.update()
+                    time.sleep(2)
+                    return
+
+
+        for bomb in pg.sprite.spritecollide(hunter, bombs, True):
+            if state == "hyper":
+                exps.add(Explosion(bomb, 50))
+            if state == "normal":
+                k_hp.damage(150)
+                if k_hp.hp == 0:
+                    hunter.change_img(8, screen) # こうかとん悲しみエフェクト
+                    score.update(screen)
+                    pg.display.update()
+                    time.sleep(2)
+                    return
+        
+        
         if bflag == True:
             bflag = hunter.brink()
             state = "hyper"
@@ -585,27 +827,39 @@ def main():
             Hyper(hunter, screen)
         else:
             state = "normal"
+            state = "normal"
             cl = 50
+            
+        tmr += 1
+        atk1.update(tmr)
+        atk1.draw(screen)
         hunter.update(key_lst, screen)
-        # beams.update()
-        # beams.draw(screen)
-        emys.update()
-        emys.draw(screen)
-        bombs.update()
-        bombs.draw(screen)
         aa.update(hunter)
         skill.update(hunter)
         aa.draw(screen)
         skill.draw(screen)
+        beams.update()
+        beams.draw(screen)
+        emys.update(tmr)
+        emys.draw(screen)
+        bombs.update()
+        bombs.draw(screen)
         # gravity.update()
         # gravity.draw(screen)
-        exps.update()
-        exps.draw(screen)
+        # exps.update()
+        # exps.draw(screen)
         score.update(screen)
+        Item_h.update(screen)
+        Item_k.update(screen)
+        Item_a.update(screen)
+        if at == 2:
+            Item_a_efe.update(screen)
+        k_hp.update(screen)
+        k_sp.update(screen)
+        e_hp.update(screen)
         # shields.update()
         # shields.draw(screen)
         pg.display.update()
-        tmr += 1
         clock.tick(cl)
 
 
