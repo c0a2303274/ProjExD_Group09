@@ -284,9 +284,6 @@ class Score:
         screen.blit(self.image, self.rect)
 
 
-
-
-
 def main():
     pg.display.set_caption("こうかとん狩猟")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
