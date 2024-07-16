@@ -307,6 +307,138 @@ class Atk1(pg.sprite.Sprite):
             self.kill()
 
 
+class item_h(pg.sprite.Sprite):
+    """"
+    回復薬の管理
+    """
+    def __init__(self):
+        self.font = pg.font.SysFont("hgp創英角ﾎﾟｯﾌﾟ体", 40)
+        self.color = (0, 180, 0)
+        self.value = 3
+        self.image = self.font.render(f"回復薬: {self.value}", 0, self.color)
+        self.rect = self.image.get_rect()
+        self.rect.center = 1010, HEIGHT-100
+
+    def update(self, screen: pg.Surface):
+        self.image = self.font.render(f"回復薬: {self.value}", 0, self.color)
+        screen.blit(self.image, self.rect)
+
+
+class item_k(pg.sprite.Sprite):
+    """"
+    強走薬の管理
+    """
+    def __init__(self):
+        self.font = pg.font.SysFont("hgp創英角ﾎﾟｯﾌﾟ体", 40)
+        self.color = (255, 255, 0)
+        self.value = 3
+        self.image = self.font.render(f"強走薬: {self.value}", 0, self.color)
+        self.rect = self.image.get_rect()
+        self.rect.center = 1010, HEIGHT-60
+
+    def update(self, screen: pg.Surface):
+        self.image = self.font.render(f"強走薬: {self.value}", 0, self.color)
+        screen.blit(self.image, self.rect)
+
+class item_a(pg.sprite.Sprite):
+    """"
+    鬼人薬の管理
+    """
+    def __init__(self):
+        self.font = pg.font.SysFont("hgp創英角ﾎﾟｯﾌﾟ体", 40)
+        self.color = (255, 0, 0)
+        self.value = 3
+        self.image = self.font.render(f"鬼人薬: {self.value}", 0, self.color)
+        self.rect = self.image.get_rect()
+        self.rect.center = 1010, HEIGHT-20
+
+    def update(self, screen: pg.Surface):
+        self.image = self.font.render(f"鬼人薬: {self.value}", 0, self.color)
+        screen.blit(self.image, self.rect)
+
+
+class item_a_efe():
+    """"
+    鬼人薬のエフェクト
+    """
+    def __init__(self):
+        self.font = pg.font.SysFont("hgp創英角ﾎﾟｯﾌﾟ体", 40)
+        self.color = (255, 0, 0)
+        self.image = self.font.render(f"UP中！", 0, self.color)
+        self.rect = self.image.get_rect()
+        self.rect.center = 800, HEIGHT-20
+
+    def update(self, screen: pg.Surface):
+        self.image = self.font.render(f"UP中！", 0, self.color)
+        screen.blit(self.image, self.rect)
+
+
+class item_h(pg.sprite.Sprite):
+    """"
+    回復薬の管理
+    """
+    def __init__(self):
+        self.font = pg.font.SysFont("hgp創英角ﾎﾟｯﾌﾟ体", 40)
+        self.color = (0, 180, 0)
+        self.value = 3
+        self.image = self.font.render(f"回復薬: {self.value}", 0, self.color)
+        self.rect = self.image.get_rect()
+        self.rect.center = 1010, HEIGHT-100
+
+    def update(self, screen: pg.Surface):
+        self.image = self.font.render(f"回復薬: {self.value}", 0, self.color)
+        screen.blit(self.image, self.rect)
+
+
+class item_k(pg.sprite.Sprite):
+    """"
+    強走薬の管理
+    """
+    def __init__(self):
+        self.font = pg.font.SysFont("hgp創英角ﾎﾟｯﾌﾟ体", 40)
+        self.color = (255, 255, 0)
+        self.value = 3
+        self.image = self.font.render(f"強走薬: {self.value}", 0, self.color)
+        self.rect = self.image.get_rect()
+        self.rect.center = 1010, HEIGHT-60
+
+    def update(self, screen: pg.Surface):
+        self.image = self.font.render(f"強走薬: {self.value}", 0, self.color)
+        screen.blit(self.image, self.rect)
+
+class item_a(pg.sprite.Sprite):
+    """"
+    鬼人薬の管理
+    """
+    def __init__(self):
+        self.font = pg.font.SysFont("hgp創英角ﾎﾟｯﾌﾟ体", 40)
+        self.color = (255, 0, 0)
+        self.value = 3
+        self.image = self.font.render(f"鬼人薬: {self.value}", 0, self.color)
+        self.rect = self.image.get_rect()
+        self.rect.center = 1010, HEIGHT-20
+
+    def update(self, screen: pg.Surface):
+        self.image = self.font.render(f"鬼人薬: {self.value}", 0, self.color)
+        screen.blit(self.image, self.rect)
+
+
+class item_a_efe():
+    """"
+    鬼人薬のエフェクト
+    """
+    def __init__(self):
+        self.font = pg.font.SysFont("hgp創英角ﾎﾟｯﾌﾟ体", 40)
+        self.color = (255, 0, 0)
+        self.image = self.font.render(f"UP中！", 0, self.color)
+        self.rect = self.image.get_rect()
+        self.rect.center = 800, HEIGHT-20
+
+    def update(self, screen: pg.Surface):
+        self.image = self.font.render(f"UP中！", 0, self.color)
+        screen.blit(self.image, self.rect)
+
+
 class Score:
     """
     打ち落とした爆弾，敵機の数をスコアとして表示するクラス
@@ -471,6 +603,14 @@ def main():
     bg_img = pg.image.load(f"fig/pg_bg.jpg")
     score = Score()
 
+    Item_h = item_h()
+    Item_k = item_k()
+    Item_a = item_a()
+
+    Item_h = item_h()
+    Item_k = item_k()
+    Item_a = item_a()
+
     hunter = Hunter(3, (900, 400))
     aa = pg.sprite.Group()
     skill = pg.sprite.Group()
@@ -480,6 +620,7 @@ def main():
     emys = pg.sprite.Group()
     shields = pg.sprite.Group() 
     gravity = pg.sprite.Group()
+    Item_a_efe = item_a_efe()
     atk1 = pg.sprite.Group()
 
     tmr = 0
@@ -488,7 +629,12 @@ def main():
     k_hp = HP(1000, "Massun", (30, 100), 12)
     k_sp = SP(100, (30, 100), 12)
     e_hp = HP(15000, "コウカトン", (240, 40), 20)
+    Item_a_efe = item_a_efe()
 
+    at = 1
+    add_sp = 0
+    a_co = 500
+    sp_co = 500
     tmr = 0
     clock = pg.time.Clock()
     state = "normal"
@@ -515,13 +661,39 @@ def main():
             #     if score.value >= 20:  #電磁パルス
             #         Emp(bombs, emys, screen)
             #         score.value -= 20
-
             if event.type == pg.KEYDOWN and event.key == pg.K_RETURN:
                 if not aflag:
                     if k_sp.sp >= 30:
                         k_sp.pay_sp(30)
                         aflag = True
                         skill.add(Attack(hunter, 2))
+
+            if event.type == pg.KEYDOWN and event.key == pg.K_i:   #回復薬
+                if Item_h.value >= 1:
+                    if k_hp.hp <= 700:
+                        Item_h.value -= 1
+                        k_hp.damage(-300)       
+            if event.type == pg.KEYDOWN and event.key == pg.K_k:   #強走薬
+                if Item_k.value >= 1:
+                    k_sp.max_sp = 200
+                    k_sp.sp += 100
+                    add_sp = 2 
+                    Item_k.value -= 1
+            if event.type == pg.KEYDOWN and event.key == pg.K_j:   #鬼人薬
+                if Item_a.value >= 1:
+                    Item_a.value -= 1
+                    at = 2         #攻撃力UP
+        if add_sp == 2:
+                sp_co -= 1
+                if sp_co <= 0:
+                    k_sp.max_sp = 100
+                    add_sp = 1
+                    sp_co = 500
+        if at == 2:
+                a_co -= 1
+                if a_co <= 0:
+                    at = 1
+                    a_co = 500
             #無敵発動する方法と条件
         #     if key_lst[pg.K_RSHIFT] and score.value >= 100 and state == "normal":
         #         state = "hyper"
@@ -549,7 +721,7 @@ def main():
             
 
         for emy in pg.sprite.groupcollide(emys, aa, False, False).keys():
-            e_hp.damage(6)
+            e_hp.damage(6 * at)
             if e_hp.hp == 0:
                 color = [255, 255, 255]
                 font = pg.font.SysFont("hgp創英角ﾎﾟｯﾌﾟ体", 20)
@@ -562,7 +734,7 @@ def main():
                 return
             
         for emy in pg.sprite.groupcollide(emys, skill, False, False).keys():
-            e_hp.damage(18)
+            e_hp.damage(18 * at)
             if e_hp.hp == 0:
                 color = [255, 255, 255]
                 font = pg.font.SysFont("hgp創英角ﾎﾟｯﾌﾟ体", 20)
@@ -639,6 +811,11 @@ def main():
         # exps.update()
         # exps.draw(screen)
         score.update(screen)
+        Item_h.update(screen)
+        Item_k.update(screen)
+        Item_a.update(screen)
+        if at == 2:
+            Item_a_efe.update(screen)
         k_hp.update(screen)
         k_sp.update(screen)
         e_hp.update(screen)
