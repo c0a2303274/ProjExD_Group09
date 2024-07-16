@@ -632,7 +632,9 @@ def main():
     Item_a_efe = item_a_efe()
 
     at = 1
+    add_sp = 0
     a_co = 500
+    sp_co = 500
     tmr = 0
     clock = pg.time.Clock()
     state = "normal"
@@ -659,30 +661,39 @@ def main():
             #     if score.value >= 20:  #電磁パルス
             #         Emp(bombs, emys, screen)
             #         score.value -= 20
-            if event.type == pg.KEYDOWN and event.key == pg.K_i:   #回復薬
-                if Item_h.value >= 1:
-                    #if k_hp.hp <= 70:
-                        Item_h.value -= 1
-                        #k_hp.damage(-30)       回復
-            if event.type == pg.KEYDOWN and event.key == pg.K_k:   #強走薬
-                if Item_k.value >= 1:
-                    Item_k.value -= 1
-                    #スタミナ回復が早くなる
-            if event.type == pg.KEYDOWN and event.key == pg.K_j:   #鬼人薬
-                if Item_a.value >= 1:
-                    Item_a.value -= 1
-                    at = 2         #攻撃力UP
-        if at == 2:
-            a_co -= 1
-            if a_co <= 0:
-                at = 1
-                a_co = 500
             if event.type == pg.KEYDOWN and event.key == pg.K_RETURN:
                 if not aflag:
                     if k_sp.sp >= 30:
                         k_sp.pay_sp(30)
                         aflag = True
                         skill.add(Attack(hunter, 2))
+
+            if event.type == pg.KEYDOWN and event.key == pg.K_i:   #回復薬
+                if Item_h.value >= 1:
+                    if k_hp.hp <= 700:
+                        Item_h.value -= 1
+                        k_hp.damage(-300)       
+            if event.type == pg.KEYDOWN and event.key == pg.K_k:   #強走薬
+                if Item_k.value >= 1:
+                    k_sp.max_sp = 200
+                    k_sp.sp += 100
+                    add_sp = 2 
+                    Item_k.value -= 1
+            if event.type == pg.KEYDOWN and event.key == pg.K_j:   #鬼人薬
+                if Item_a.value >= 1:
+                    Item_a.value -= 1
+                    at = 2         #攻撃力UP
+        if add_sp == 2:
+                sp_co -= 1
+                if sp_co <= 0:
+                    k_sp.max_sp = 100
+                    add_sp = 1
+                    sp_co = 500
+        if at == 2:
+                a_co -= 1
+                if a_co <= 0:
+                    at = 1
+                    a_co = 500
             #無敵発動する方法と条件
         #     if key_lst[pg.K_RSHIFT] and score.value >= 100 and state == "normal":
         #         state = "hyper"
@@ -710,7 +721,7 @@ def main():
             
 
         for emy in pg.sprite.groupcollide(emys, aa, False, False).keys():
-            e_hp.damage(6)
+            e_hp.damage(6 * at)
             if e_hp.hp == 0:
                 color = [255, 255, 255]
                 font = pg.font.SysFont("hgp創英角ﾎﾟｯﾌﾟ体", 20)
@@ -723,7 +734,7 @@ def main():
                 return
             
         for emy in pg.sprite.groupcollide(emys, skill, False, False).keys():
-            e_hp.damage(18)
+            e_hp.damage(18 * at)
             if e_hp.hp == 0:
                 color = [255, 255, 255]
                 font = pg.font.SysFont("hgp創英角ﾎﾟｯﾌﾟ体", 20)
