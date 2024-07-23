@@ -211,47 +211,47 @@ class Bomb(pg.sprite.Sprite):
         if check_bound(self.rect) != (True, True):
             self.kill()
 
-class Explosion(pg.sprite.Sprite):
-    """
-    爆発に関するクラス
-    """
-    def __init__(self, obj: "Bomb|Monster", life: int):
-        """
-        爆弾が爆発するエフェクトを生成する
-        引数1 obj：爆発するBombまたは敵機インスタンス
-        引数2 life：爆発時間
-        """
-        super().__init__()
-        img = pg.image.load(f"fig/explosion.gif")
-        self.imgs = [img, pg.transform.flip(img, 1, 1)]
-        self.image = self.imgs[0]
-        self.rect = self.image.get_rect(center=obj.rect.center)
-        self.life = life
+# class Explosion(pg.sprite.Sprite):
+#     """
+#     爆発に関するクラス
+#     """
+#     def __init__(self, obj: "Bomb|Monster", life: int):
+#         """
+#         爆弾が爆発するエフェクトを生成する
+#         引数1 obj：爆発するBombまたは敵機インスタンス
+#         引数2 life：爆発時間
+#         """
+#         super().__init__()
+#         img = pg.image.load(f"fig/explosion.gif")
+#         self.imgs = [img, pg.transform.flip(img, 1, 1)]
+#         self.image = self.imgs[0]
+#         self.rect = self.image.get_rect(center=obj.rect.center)
+#         self.life = life
 
-    def update(self):
-        """
-        爆発時間を1減算した爆発経過時間_lifeに応じて爆発画像を切り替えることで
-        爆発エフェクトを表現する
-        """
-        self.life -= 1
-        self.image = self.imgs[self.life//10%2]
-        if self.life < 0:
-            self.kill()
+#     def update(self):
+#         """
+#         爆発時間を1減算した爆発経過時間_lifeに応じて爆発画像を切り替えることで
+#         爆発エフェクトを表現する
+#         """
+#         self.life -= 1
+#         self.image = self.imgs[self.life//10%2]
+#         if self.life < 0:
+#             self.kill()
 
 
-class Gravity(pg.sprite.Sprite):
-    def __init__(self, life: int):
-        super().__init__()
-        self.image = pg.Surface((WIDTH, HEIGHT))
-        self.rect = self.image.get_rect()
-        pg.draw.rect(self.image, (0,0,0),(0, 0, WIDTH, HEIGHT))
-        self.image.set_alpha(128)
-        self.life = life    
-    def update(self):
-        self.life -= 1
-        if self.life < 0:
-            self.kill()
-        # screen.blit(self.img, self.rct)
+# class Gravity(pg.sprite.Sprite):
+#     def __init__(self, life: int):
+#         super().__init__()
+#         self.image = pg.Surface((WIDTH, HEIGHT))
+#         self.rect = self.image.get_rect()
+#         pg.draw.rect(self.image, (0,0,0),(0, 0, WIDTH, HEIGHT))
+#         self.image.set_alpha(128)
+#         self.life = life    
+#     def update(self):
+#         self.life -= 1
+#         if self.life < 0:
+#             self.kill()
+#         # screen.blit(self.img, self.rct)
 
 
 class Monster(pg.sprite.Sprite):
