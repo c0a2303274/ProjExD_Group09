@@ -258,7 +258,7 @@ class Monster(pg.sprite.Sprite):
     """
     こうかとんに関するクラス
     """
-    imgs = [pg.image.load(f"fig/B.png")]
+    imgs = [pg.image.load(f"fig/9.png")]
     
     def __init__(self):
         super().__init__()
