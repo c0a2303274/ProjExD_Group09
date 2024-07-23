@@ -258,7 +258,7 @@ class Monster(pg.sprite.Sprite):
     """
     こうかとんに関するクラス
     """
-    imgs = [pg.image.load(f"fig/9.png")]
+    imgs = [pg.image.load(f"fig/B.png")]
     
     def __init__(self):
         super().__init__()
@@ -721,27 +721,6 @@ def main():
                 time.sleep(2)
                 return
 
-        for bomb in pg.sprite.groupcollide(bombs, beams, True, True).keys():
-            exps.add(Explosion(bomb, 50))  # 爆発エフェクト
-            # score.value += 1  # 1点アップ
-        
-        # for shield in pg.sprite.groupcollide(bombs, shields, True, True).keys():
-        #     exps.add(Explosion(shield, 50))  # 爆発エフェクト
-        #     score.value += 1  # 1点アップ
-
-        for bomb in pg.sprite.groupcollide(bombs, gravity, True, False).keys():
-            exps.add(Explosion(bomb, 50))
-
-        for emy in pg.sprite.groupcollide(emys, gravity, True, False).keys():
-            exps.add(Explosion(emy, 50))
-
-        # for emy in pg.sprite.spritecollide(hunter, emys, False):
-        #     if state == "normal":
-        #         hunter.change_img(8, screen) # こうかとん悲しみエフェクト
-        #         # score.update(screen)
-        #         pg.display.update()
-        #         time.sleep(2)
-        #         return
             
         for emy in pg.sprite.spritecollide(hunter,atk1,False):
             if state == "normal":
@@ -765,6 +744,16 @@ def main():
                     pg.display.update()
                     time.sleep(2)
                     return
+        if e_hp.hp <= 0:
+            font = pg.font.SysFont("hgp創英角ﾎﾟｯﾌﾟ体", 100)
+            color = (255, 0, 0)
+            ll = font.render(f"クリア！！！", 0, color)
+            llrect = ll.get_rect()
+            llrect.center = WIDTH / 2, HEIGHT / 2
+            screen.blit(ll, llrect)
+            pg.display.update()
+            time.sleep(2)
+            return
         
         if k_sp.sp >= 30:
             if bflag == True:
